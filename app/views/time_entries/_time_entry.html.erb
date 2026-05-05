@@ -13,18 +13,18 @@
 
       <%# Main content %>
       <div class="min-w-0 flex-1">
-        <div class="flex flex-wrap items-start justify-between gap-2">
+        <div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
           <div class="min-w-0">
             <%# Task name %>
-            <div class="flex items-center gap-1.5">
+            <div class="flex min-w-0 items-center gap-1.5">
               <% if entry.task.jira_url.present? %>
-                <span class="text-xs font-medium text-accent">[<%= entry.task.jira_key %>]</span>
+                <span class="shrink-0 text-xs font-medium text-accent">[<%= entry.task.jira_key %>]</span>
               <% end %>
               <span class="text-sm font-medium text-foreground truncate"><%= entry.task.title %></span>
             </div>
             <%# Description %>
             <% if entry.description.present? %>
-              <p class="mt-0.5 text-sm text-foreground-muted line-clamp-2"><%= entry.description %></p>
+              <p class="mt-0.5 break-words text-sm text-foreground-muted line-clamp-2"><%= entry.description %></p>
             <% end %>
           </div>
 
