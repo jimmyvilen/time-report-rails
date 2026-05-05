@@ -6,6 +6,8 @@ class TimeEntry < ApplicationRecord
 
   validates :date, presence: true, format: { with: /\A\d{4}-\d{2}-\d{2}\z/ }
   validates :task_id, presence: true
+  validates :duration_minutes, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+  validate :time_information_present
   validate :end_time_after_start_time
   validate :task_belongs_to_user
 
@@ -29,6 +31,12 @@ class TimeEntry < ApplicationRecord
   end
 
   private
+
+  def time_information_present
+    return if duration_minutes.to_i.positive? || start_time.present? || end_time.present?
+
+    errors.add(:base, "Ange varaktighet, starttid eller sluttid")
+  end
 
   def end_time_after_start_time
     return unless start_time && end_time

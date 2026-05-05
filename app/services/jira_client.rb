@@ -38,6 +38,12 @@ class JiraClient
     raise ArgumentError, jira_error_message(e.respond_to?(:response) ? e.response&.dig(:status) : nil, issue_key)
   end
 
+  def delete_worklog(issue_key:, worklog_id:)
+    connection.delete("/rest/api/3/issue/#{issue_key}/worklog/#{worklog_id}")
+  rescue Faraday::Error, SocketError, SystemCallError => e
+    raise ArgumentError, jira_error_message(e.respond_to?(:response) ? e.response&.dig(:status) : nil, issue_key)
+  end
+
   def self.format_worklog_date(time)
     utc = time.utc
     utc.strftime("%Y-%m-%dT%H:%M:%S.") + utc.strftime("%L") + "+0000"

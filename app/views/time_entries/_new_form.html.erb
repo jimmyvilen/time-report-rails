@@ -1,10 +1,13 @@
+<% visible = local_assigns.fetch(:visible, entry.errors.any?) %>
 <div id="new-entry-form"
-     class="hidden mt-3 rounded-xl border border-border bg-background-card p-4"
+     class="<%= [("hidden" unless visible), "mt-3 rounded-xl border border-border bg-background-card p-4"].compact.join(" ") %>"
      data-time-entry-form-target="formPanel">
 
   <%= form_with url: time_entries_path, method: :post,
         class: "space-y-3" do |f| %>
     <input type="hidden" name="time_entry[date]" value="<%= date %>">
+
+    <%= render "time_entries/form_errors", entry: entry %>
 
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <div class="sm:col-span-2">

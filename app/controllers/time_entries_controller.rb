@@ -18,16 +18,11 @@ class TimeEntriesController < ApplicationController
     @entry.description = params.dig(:time_entry, :description)
 
     begin
-      resolved = TimeEntryResolver.resolve(
-        date_str:         @date,
-        start_time:       parse_time_input(params.dig(:time_entry, :start_time), @date, "Starttid"),
-        end_time:         parse_time_input(params.dig(:time_entry, :end_time), @date, "Sluttid"),
-        duration_minutes: DurationParser.parse(params.dig(:time_entry, :duration))
-      )
+      resolved = resolve_time_entry_attributes(@date)
       @entry.assign_attributes(resolved)
     rescue ArgumentError => e
-      flash.now[:alert] = e.message
-      return render :new, status: :unprocessable_entity
+      @entry.errors.add(:base, e.message)
+      return render_new_entry_error
     end
 
     TimeEntry.transaction do
@@ -55,34 +50,52 @@ class TimeEntriesController < ApplicationController
         format.html { redirect_to dashboard_path(date: @date) }
       end
     else
-      render :new, status: :unprocessable_entity
+      render_new_entry_error
     end
   end
 
   def edit
     @date  = @entry.date
     @tasks = current_user.tasks.active.ordered
+    @jira_sync_snapshot = jira_sync_snapshot(@entry)
   end
 
   def update
     @date  = @entry.date.to_s
     @tasks = current_user.tasks.active.ordered
+    original_jira_sync = jira_sync_snapshot(@entry)
+    @jira_sync_snapshot = original_jira_sync
 
     begin
-      resolved = TimeEntryResolver.resolve(
-        date_str:         @date,
-        start_time:       parse_time_input(params.dig(:time_entry, :start_time), @date, "Starttid"),
-        end_time:         parse_time_input(params.dig(:time_entry, :end_time), @date, "Sluttid"),
-        duration_minutes: DurationParser.parse(params.dig(:time_entry, :duration))
-      )
+      resolved = resolve_time_entry_attributes(@date)
       attrs = resolved.merge(
         task_id:     params.dig(:time_entry, :task_id) || @entry.task_id,
         description: params.dig(:time_entry, :description)
       )
       @entry.assign_attributes(attrs)
     rescue ArgumentError => e
-      flash.now[:alert] = e.message
-      return render :edit, status: :unprocessable_entity
+      @entry.errors.add(:base, e.message)
+      return render_edit_error
+    end
+
+    if jira_reset_required?(original_jira_sync, @entry)
+      return render_edit_error unless @entry.valid?
+
+      if jira_delete_decision_required?(original_jira_sync) && jira_delete_decision_missing?
+        @entry.errors.add(:base, "Välj om den gamla Jira-tidsregistreringen ska raderas.")
+        return render_edit_error
+      end
+
+      if delete_jira_worklog_requested?
+        begin
+          delete_previous_jira_worklog!(original_jira_sync)
+        rescue ArgumentError => e
+          @entry.errors.add(:base, e.message)
+          return render_edit_error
+        end
+      end
+
+      clear_jira_push_state(@entry)
     end
 
     if @entry.save
@@ -100,7 +113,7 @@ class TimeEntriesController < ApplicationController
         format.html { redirect_to dashboard_path(date: @date) }
       end
     else
-      render :edit, status: :unprocessable_entity
+      render_edit_error
     end
   end
 
@@ -320,6 +333,93 @@ class TimeEntriesController < ApplicationController
     date = Date.iso8601(date_str)
     hour, minute = value.split(":").map(&:to_i)
     Time.zone.local(date.year, date.month, date.day, hour, minute)
+  end
+
+  def resolve_time_entry_attributes(date_str)
+    raw_start_time = params.dig(:time_entry, :start_time)
+    raw_end_time = params.dig(:time_entry, :end_time)
+    raw_duration = params.dig(:time_entry, :duration)
+
+    if raw_start_time.blank? && raw_end_time.blank? && raw_duration.blank?
+      return { start_time: nil, end_time: nil, duration_minutes: nil }
+    end
+
+    TimeEntryResolver.resolve(
+      date_str: date_str,
+      start_time: parse_time_input(raw_start_time, date_str, "Starttid"),
+      end_time: parse_time_input(raw_end_time, date_str, "Sluttid"),
+      duration_minutes: DurationParser.parse(raw_duration)
+    )
+  end
+
+  def jira_sync_snapshot(entry)
+    {
+      pushed:                     entry.pushed?,
+      task_id:                    entry.task_id,
+      task_jira_url:              entry.task&.jira_url,
+      start_time_value:           entry.start_time&.strftime("%H:%M"),
+      start_time_seconds:         entry.start_time&.to_i,
+      effective_duration_minutes: entry.effective_duration_minutes.to_i,
+      jira_worklog_id:            entry.jira_worklog_id
+    }
+  end
+
+  def jira_reset_required?(snapshot, entry)
+    return false unless snapshot[:pushed] || snapshot[:jira_worklog_id].present?
+
+    snapshot[:task_id] != entry.task_id ||
+      snapshot[:start_time_seconds] != entry.start_time&.to_i ||
+      snapshot[:effective_duration_minutes] != entry.effective_duration_minutes.to_i
+  end
+
+  def delete_jira_worklog_requested?
+    ActiveModel::Type::Boolean.new.cast(params.dig(:time_entry, :delete_jira_worklog))
+  end
+
+  def jira_delete_decision_required?(snapshot)
+    snapshot[:jira_worklog_id].present?
+  end
+
+  def jira_delete_decision_missing?
+    params.dig(:time_entry, :delete_jira_worklog).blank?
+  end
+
+  def delete_previous_jira_worklog!(snapshot)
+    return if snapshot[:jira_worklog_id].blank?
+
+    issue_key = JiraClient.extract_issue_key(snapshot[:task_jira_url])
+    raise ArgumentError, "Kunde inte extrahera issue key från tidigare Jira-URL" unless issue_key
+
+    u = current_user
+    unless u.jira_url.present? && u.jira_email.present? && u.jira_api_token.present?
+      raise ArgumentError, "Jira-konfiguration saknas. Gå till Profil."
+    end
+
+    client = JiraClient.new(jira_url: u.jira_url, jira_email: u.jira_email, jira_api_token: u.jira_api_token)
+    client.delete_worklog(issue_key: issue_key, worklog_id: snapshot[:jira_worklog_id])
+  end
+
+  def clear_jira_push_state(entry)
+    entry.pushed_to_system = nil
+    entry.pushed_at = nil
+    entry.jira_worklog_id = nil
+  end
+
+  def render_new_entry_error
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.replace(
+          "new-entry-form",
+          partial: "time_entries/new_form",
+          locals: { entry: @entry, date: @date, tasks: @tasks }
+        ), status: :unprocessable_entity
+      end
+      format.html { render :new, status: :unprocessable_entity }
+    end
+  end
+
+  def render_edit_error
+    render :edit, formats: [:html], status: :unprocessable_entity
   end
 
   def safe_parse_date(str)
