@@ -24,15 +24,29 @@
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div class="sm:col-span-2">
           <label class="mb-1 block text-xs font-medium text-foreground-muted">Task</label>
-          <select name="time_entry[task_id]" required
-                  class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-                  data-time-entry-form-target="taskSelect">
-            <% @tasks.each do |task| %>
-              <option value="<%= task.id %>" <%= task.id == @entry.task_id ? "selected" : "" %>>
-                <%= task.jira_key ? "[#{task.jira_key}] " : "" %><%= task.title %>
-              </option>
-            <% end %>
-          </select>
+          <div class="relative"
+               data-controller="task-selector"
+               data-task-selector-tasks-value="<%= html_escape(@tasks.map { |t| { id: t.id, title: t.title, jira_key: t.jira_key, jira_url: t.jira_url } }.to_json) %>"
+               data-task-selector-create-url-value="<%= tasks_path %>"
+               data-task-selector-jira-fetch-url-value="<%= jira_fetch_details_path %>">
+            <% current_task = @tasks.find { |t| t.id == @entry.task_id } %>
+            <input type="text"
+                   value="<%= current_task ? (current_task.jira_key ? "[#{current_task.jira_key}] #{current_task.title}" : current_task.title) : "" %>"
+                   placeholder="Sök eller klistra in Jira-länk…"
+                   autocomplete="off"
+                   class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder-foreground-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                   data-task-selector-target="input"
+                   data-action="focus->task-selector#onFocus input->task-selector#onInput" />
+            <input type="hidden" name="time_entry[task_id]" required
+                   value="<%= @entry.task_id %>"
+                   data-task-selector-target="hidden"
+                   data-time-entry-form-target="taskSelect"
+                   data-action="change->time-entry-form#onTaskChange" />
+            <div class="absolute z-10 w-full mt-1 hidden rounded-xl border border-border bg-background-card shadow-lg max-h-60 overflow-auto"
+                 data-task-selector-target="dropdown">
+              <ul data-task-selector-target="list"></ul>
+            </div>
+          </div>
         </div>
 
         <div class="sm:col-span-2">
