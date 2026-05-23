@@ -255,13 +255,6 @@ export function TimeEntryForm({ date, editEntry, onClose }: Props) {
           )}
         </div>
 
-        <Input
-          label="Beskrivning"
-          value={description}
-          onChange={e => setDescription(e.target.value)}
-          placeholder="Valfri beskrivning"
-        />
-
         <div className="grid grid-cols-3 gap-3">
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-[var(--foreground-muted)]">Start</label>
@@ -288,6 +281,13 @@ export function TimeEntryForm({ date, editEntry, onClose }: Props) {
             placeholder="1h 30m"
           />
         </div>
+
+        <Input
+          label="Beskrivning"
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          placeholder="Valfri beskrivning"
+        />
 
         {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
 
