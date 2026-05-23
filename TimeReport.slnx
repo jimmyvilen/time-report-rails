@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Backend/">
+    <Project Path="src/Backend/TimeReport.Api.Tests/TimeReport.Api.Tests.csproj" />
+    <Project Path="src/Backend/TimeReport.Api/TimeReport.Api.csproj" />
+  </Folder>
+</Solution>

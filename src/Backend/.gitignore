@@ -1,0 +1,12 @@
+bin
+obj
+wwwroot
+appsettings.Development.json
+appsettings.Production.json
+appsettings.Staging.json
+appsettings.Local.json
+appsettings.*.json
+*.log
+*.user
+*.suo
+*.cache
