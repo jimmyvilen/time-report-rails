@@ -1,28 +1,28 @@
 # TimeReport
 
-Tidrapporteringsapp byggd med ASP.NET Core + React + TypeScript.
+Time reporting app built with ASP.NET Core + React + TypeScript.
 
-## Teknikstack
+## Tech Stack
 
-- **Backend**: ASP.NET Core .NET 9, Entity Framework Core, SQLite
+- **Backend**: ASP.NET Core .NET 10, Entity Framework Core, SQLite
 - **Frontend**: React 19, TypeScript, Vite, Tailwind CSS v4, TanStack Query
-- **Auth**: Cookie-baserad auth (HttpOnly, SameSite=Lax)
-- **Deploy**: Single-container med Vite byggt till wwwroot
+- **Auth**: Cookie-based auth (HttpOnly, SameSite=Lax)
+- **Deploy**: Single-container with Vite built to wwwroot
 
-## Komma igång
+## Getting Started
 
-### Krav
+### Requirements
 
-- .NET 9 SDK
+- .NET 10 SDK
 - Node.js 22+
 
-### Starta i development
+### Running in Development
 
 **Terminal 1 – Backend:**
 ```bash
 cd src/Backend/TimeReport.Api
 dotnet run
-# API tillgängligt på http://localhost:5231
+# API available at http://localhost:5231
 ```
 
 **Terminal 2 – Frontend:**
@@ -30,101 +30,101 @@ dotnet run
 cd src/Frontend
 npm install
 npm run dev
-# Frontend på http://localhost:5173 (proxyas /api → backend)
+# Frontend at http://localhost:5173 (proxies /api → backend)
 ```
 
-Öppna http://localhost:5173 i webbläsaren.
+Open http://localhost:5173 in your browser.
 
-### Bygga för produktion
+### Building for Production
 
 ```bash
-# Bygg frontend (skriver till src/Backend/TimeReport.Api/wwwroot)
+# Build frontend (writes to src/Backend/TimeReport.Api/wwwroot)
 cd src/Frontend && npm run build
 
-# Kör backend (serverar frontend via wwwroot)
+# Run backend (serves frontend via wwwroot)
 cd src/Backend/TimeReport.Api && dotnet run
-# Öppna http://localhost:5231
+# Open http://localhost:5231
 ```
 
 ### Docker
 
 ```bash
-# Bygg och kör
+# Build and run
 docker compose up --build
 
-# App tillgänglig på http://localhost:8080
+# App available at http://localhost:8080
 ```
 
-Kopiera databasen till data-mappen vid första körning:
+Copy the database to the data folder on first run:
 ```bash
 mkdir data
 cp db/local.db data/timereport.db
 ```
 
-## Projektstruktur
+## Project Structure
 
 ```
 src/
 ├─ Backend/
 │  ├─ TimeReport.Api/          ASP.NET Core API
-│  │  ├─ Controllers/          API-endpoints
+│  │  ├─ Controllers/          API endpoints
 │  │  ├─ Data/
-│  │  │  ├─ Entities/          EF Core entiteter
+│  │  │  ├─ Entities/          EF Core entities
 │  │  │  └─ AppDbContext.cs
 │  │  ├─ Services/             DurationParser, TimeEntryResolver, JiraService
-│  │  └─ wwwroot/              Vite build (auto-genererad)
-│  └─ TimeReport.Api.Tests/    Unit-tester
+│  │  └─ wwwroot/              Vite build (auto-generated)
+│  └─ TimeReport.Api.Tests/    Unit tests
 └─ Frontend/
    └─ src/
-      ├─ api/                  Fetch-wrappers per resurs
-      ├─ components/           Delade UI-komponenter
-      ├─ features/             Feature-moduler (dashboard, projects, tasks...)
-      └─ lib/                  Hjälpfunktioner (durationParser, dateUtils...)
+      ├─ api/                  Fetch wrappers per resource
+      ├─ components/           Shared UI components
+      ├─ features/             Feature modules (dashboard, projects, tasks...)
+      └─ lib/                  Helper functions (durationParser, dateUtils...)
 ```
 
-## API-endpoints
+## API Endpoints
 
-### Auth (ingen autentisering krävs)
-| Method | Endpoint | Beskrivning |
+### Auth (no authentication required)
+| Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | /api/auth/setup-status | Finns det några användare? |
-| POST | /api/auth/setup | Skapa första admin-användare |
-| POST | /api/auth/login | Logga in |
-| POST | /api/auth/logout | Logga ut |
-| POST | /api/auth/register | Registrera ny användare |
-| GET | /api/auth/me | Hämta inloggad användare |
+| GET | /api/auth/setup-status | Are there any users? |
+| POST | /api/auth/setup | Create first admin user |
+| POST | /api/auth/login | Log in |
+| POST | /api/auth/logout | Log out |
+| POST | /api/auth/register | Register new user |
+| GET | /api/auth/me | Get current user |
 
-### Tidsposter
-| Method | Endpoint | Beskrivning |
+### Time Entries
+| Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | /api/time-entries?date= | Hämta poster för ett datum |
-| POST | /api/time-entries | Skapa post (prepend, position 0) |
-| PUT | /api/time-entries/{id} | Uppdatera |
-| DELETE | /api/time-entries/{id} | Ta bort |
-| POST | /api/time-entries/{id}/duplicate | Duplicera |
-| POST | /api/time-entries/reorder | Ändra ordning |
-| GET | /api/time-entries/weekly-summary?date= | Veckoöversikt (mån-sön) |
-| POST | /api/time-entries/{id}/push-to-jira | Pusha worklog till Jira |
-| GET | /api/time-entries/export?from=&to= | CSV-export |
+| GET | /api/time-entries?date= | Get entries for a date |
+| POST | /api/time-entries | Create entry (prepend, position 0) |
+| PUT | /api/time-entries/{id} | Update |
+| DELETE | /api/time-entries/{id} | Delete |
+| POST | /api/time-entries/{id}/duplicate | Duplicate |
+| POST | /api/time-entries/reorder | Reorder |
+| GET | /api/time-entries/weekly-summary?date= | Weekly summary (Mon–Sun) |
+| POST | /api/time-entries/{id}/push-to-jira | Push worklog to Jira |
+| GET | /api/time-entries/export?from=&to= | CSV export |
 
-## Kända skillnader från Rails-versionen
+## Known Differences from Rails Version
 
-| Rails | Ny stack | Notering |
+| Rails | New Stack | Notes |
 |---|---|---|
-| Turbo Streams | TanStack Query invalidering | Automatisk re-fetch vid mutation |
-| Hotwire drag-and-drop | @dnd-kit/sortable | Liknande UX |
-| EasyMDE markdown-editor | Enkel textarea + react-markdown | Kan utökas med react-simplemde-editor |
-| I18n dagnamn | Intl.DateTimeFormat('sv-SE') | Inbyggt i webbläsaren |
-| Rails flash messages | Inline felmeddelanden i formulär | |
+| Turbo Streams | TanStack Query invalidation | Automatic re-fetch on mutation |
+| Hotwire drag-and-drop | @dnd-kit/sortable | Similar UX |
+| EasyMDE markdown editor | Simple textarea + react-markdown | Can be extended with react-simplemde-editor |
+| I18n day names | Intl.DateTimeFormat('sv-SE') | Built into the browser |
+| Rails flash messages | Inline error messages in forms | |
 | Server-side markdown | react-markdown (client-side) | |
 
-## Tester
+## Tests
 
 ```bash
-# Kör unit-tester
+# Run unit tests
 dotnet test src/Backend/TimeReport.Api.Tests/
 ```
 
-Tester täcker:
-- `DurationParser` – parsning av "1h 30m", "90m", "1.5h" etc.
+Tests cover:
+- `DurationParser` – parsing "1h 30m", "90m", "1.5h" etc.
 - `TimeEntryResolverService` – start+end→duration, start+duration→end, etc.
