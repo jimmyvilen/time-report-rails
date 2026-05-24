@@ -1,9 +1,0 @@
-<% if entry.errors.any? %>
-  <div class="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger" role="alert">
-    <ul class="space-y-1">
-      <% entry.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
-      <% end %>
-    </ul>
-  </div>
-<% end %>
