@@ -10,7 +10,7 @@ public class ProfileController(AppDbContext db) : ApiControllerBase
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var user = await db.Users.FindAsync(CurrentUserId);
+        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == CurrentUserId);
         return user is null ? NotFound() : Ok(ToDto(user));
     }
 

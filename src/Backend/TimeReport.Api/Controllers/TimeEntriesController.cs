@@ -22,6 +22,7 @@ public class TimeEntriesController(
     {
         var entries = await db.TimeEntries
             .Where(e => e.UserId == CurrentUserId && e.Date == date)
+            .AsNoTracking()
             .Include(e => e.Task).ThenInclude(t => t.Project)
             .OrderBy(e => e.Position)
             .ToListAsync();
@@ -217,6 +218,7 @@ public class TimeEntriesController(
             .Where(e => e.UserId == CurrentUserId &&
                         string.Compare(e.Date, mondayStr) >= 0 &&
                         string.Compare(e.Date, sundayStr) <= 0)
+            .AsNoTracking()
             .ToListAsync();
 
         var days = Enumerable.Range(0, 7).Select(i =>
@@ -254,6 +256,7 @@ public class TimeEntriesController(
     {
         var entry = await db.TimeEntries
             .Where(e => e.TaskId == task_id && e.UserId == CurrentUserId && !string.IsNullOrEmpty(e.Description))
+            .AsNoTracking()
             .OrderByDescending(e => e.CreatedAt)
             .FirstOrDefaultAsync();
 
@@ -310,6 +313,7 @@ public class TimeEntriesController(
     {
         var query = db.TimeEntries
             .Where(e => e.UserId == CurrentUserId)
+            .AsNoTracking()
             .Include(e => e.Task).ThenInclude(t => t.Project)
             .AsQueryable();
 

@@ -53,6 +53,7 @@ public class AuthController(AppDbContext db) : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginRequest req)
     {
         var user = await db.Users
+            .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email.ToLower() == req.Email.ToLower().Trim());
 
         if (user is null || string.IsNullOrEmpty(user.PasswordHash) ||
@@ -108,7 +109,7 @@ public class AuthController(AppDbContext db) : ControllerBase
     public async Task<IActionResult> Me()
     {
         var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var user = await db.Users.FindAsync(id);
+        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
         return user is null ? Unauthorized() : Ok(ToDto(user));
     }
 

@@ -14,6 +14,7 @@ public class ProjectsController(AppDbContext db) : ApiControllerBase
     {
         var projects = await db.Projects
             .Where(p => p.UserId == CurrentUserId)
+            .AsNoTracking()
             .Include(p => p.Tasks)
                 .ThenInclude(t => t.TimeEntries)
             .OrderBy(p => p.Name)
@@ -27,6 +28,7 @@ public class ProjectsController(AppDbContext db) : ApiControllerBase
     {
         var project = await db.Projects
             .Where(p => p.UserId == CurrentUserId && p.Id == id)
+            .AsNoTracking()
             .Include(p => p.Tasks.Where(t => !t.IsArchived))
                 .ThenInclude(t => t.TimeEntries)
             .FirstOrDefaultAsync();
@@ -35,6 +37,7 @@ public class ProjectsController(AppDbContext db) : ApiControllerBase
 
         var unassigned = await db.Tasks
             .Where(t => t.UserId == CurrentUserId && t.ProjectId == null && !t.IsArchived)
+            .AsNoTracking()
             .OrderByDescending(t => t.IsFavorite)
             .ThenByDescending(t => t.LastUsedAt)
             .ToListAsync();

@@ -14,6 +14,7 @@ public class DailyNotesController(AppDbContext db) : ApiControllerBase
     public async Task<IActionResult> Show(string date)
     {
         var note = await db.DailyNotes
+            .AsNoTracking()
             .FirstOrDefaultAsync(n => n.UserId == CurrentUserId && n.Date == date);
         return Ok(new { content = note?.Content });
     }
@@ -48,6 +49,7 @@ public class DailyNotesController(AppDbContext db) : ApiControllerBase
     {
         var query = db.DailyNotes
             .Where(n => n.UserId == CurrentUserId)
+            .AsNoTracking()
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(q))
@@ -80,6 +82,7 @@ public class DailyNotesController(AppDbContext db) : ApiControllerBase
     {
         var query = db.DailyNotes
             .Where(n => n.UserId == CurrentUserId)
+            .AsNoTracking()
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(from))

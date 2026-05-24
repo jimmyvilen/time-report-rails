@@ -16,6 +16,7 @@ public class TasksController(AppDbContext db, JiraService jira) : ApiControllerB
     {
         var query = db.Tasks
             .Where(t => t.UserId == CurrentUserId)
+            .AsNoTracking()
             .Include(t => t.Project)
             .Include(t => t.TimeEntries)
             .AsQueryable();
