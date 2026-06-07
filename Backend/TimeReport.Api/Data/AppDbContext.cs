@@ -11,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<AppTask> Tasks => Set<AppTask>();
     public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
     public DbSet<DailyNote> DailyNotes => Set<DailyNote>();
+    public DbSet<PlannerBlock> PlannerBlocks => Set<PlannerBlock>();
 
     protected override void OnModelCreating(ModelBuilder m)
     {
@@ -97,6 +98,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         m.Entity<DailyNote>()
             .HasOne(n => n.User)
             .WithMany(u => u.DailyNotes)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // PlannerBlocks
+        m.Entity<PlannerBlock>()
+            .HasIndex(b => new { b.UserId, b.Date })
+            .HasDatabaseName("planner_blocks_user_id_date_idx");
+
+        m.Entity<PlannerBlock>()
+            .HasOne(b => b.User)
+            .WithMany(u => u.PlannerBlocks)
             .OnDelete(DeleteBehavior.Cascade);
     }
 

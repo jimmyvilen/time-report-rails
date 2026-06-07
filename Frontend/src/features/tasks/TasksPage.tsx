@@ -64,7 +64,8 @@ export function TasksPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault(); setError('')
-    editTask ? updateMutation.mutate() : createMutation.mutate()
+    if (editTask) updateMutation.mutate()
+    else createMutation.mutate()
   }
 
   return (

@@ -32,3 +32,29 @@ export function formatDate(dateStr: string, locale = 'sv-SE'): string {
   const d = new Date(dateStr + 'T00:00:00')
   return new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long', day: 'numeric' }).format(d)
 }
+
+export function getWeekStart(dateStr: string): string {
+  return mondayOfWeek(dateStr)
+}
+
+export function getWeekDays(weekStart: string): string[] {
+  return Array.from({ length: 5 }, (_, i) => addDays(weekStart, i))
+}
+
+export function getISOWeekNumber(dateStr: string): number {
+  const d = new Date(dateStr + 'T00:00:00')
+  const day = d.getDay() || 7
+  d.setDate(d.getDate() + 4 - day)
+  const yearStart = new Date(d.getFullYear(), 0, 1)
+  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+}
+
+export function formatShortDate(dateStr: string, locale = 'sv-SE'): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(d)
+}
+
+export function formatShortDayName(dateStr: string, locale = 'sv-SE'): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  return new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(d)
+}

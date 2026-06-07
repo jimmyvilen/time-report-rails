@@ -20,6 +20,7 @@ export function TopNav() {
     { href: '/projects', label: 'Projekt' },
     { href: '/tasks', label: 'Uppgifter' },
     { href: '/notes', label: 'Anteckningar' },
+    { href: '/planner', label: 'Planering' },
     { href: '/export', label: 'Exportera' },
   ]
 

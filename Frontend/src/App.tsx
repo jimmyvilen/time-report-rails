@@ -12,10 +12,11 @@ import { TasksPage } from './features/tasks/TasksPage'
 import { NotesPage } from './features/notes/NotesPage'
 import { ExportPage } from './features/export/ExportPage'
 import { ProfilePage } from './features/profile/ProfilePage'
+import { PlannerPage } from './features/planner/PlannerPage'
 
 type Route =
   | 'login' | 'register' | 'setup'
-  | 'dashboard' | 'projects' | 'tasks' | 'notes' | 'export' | 'profile'
+  | 'dashboard' | 'projects' | 'tasks' | 'notes' | 'export' | 'profile' | 'planner'
 
 function getRoute(): Route {
   const path = window.location.pathname
@@ -28,6 +29,7 @@ function getRoute(): Route {
   if (path.startsWith('/notes')) return 'notes'
   if (path.startsWith('/export')) return 'export'
   if (path.startsWith('/profile')) return 'profile'
+  if (path.startsWith('/planner')) return 'planner'
   return 'dashboard'
 }
 
@@ -56,17 +58,27 @@ export default function App() {
     retry: false,
   })
 
+  useEffect(() => {
+    if (!AUTH_ROUTES.includes(route) && setupQuery.data?.usersExist === false) {
+      window.location.href = '/setup'
+    }
+  }, [route, setupQuery.data?.usersExist])
+
+  useEffect(() => {
+    if (!AUTH_ROUTES.includes(route) && meQuery.error && route !== 'login') {
+      window.location.href = '/login'
+    }
+  }, [route, meQuery.error])
+
   if (!AUTH_ROUTES.includes(route) && (meQuery.isLoading || setupQuery.isLoading)) {
     return <PageSpinner />
   }
 
   if (!AUTH_ROUTES.includes(route) && setupQuery.data?.usersExist === false) {
-    window.location.href = '/setup'
     return <PageSpinner />
   }
 
   if (!AUTH_ROUTES.includes(route) && meQuery.error) {
-    if (route !== 'login') window.location.href = '/login'
     return <PageSpinner />
   }
 
@@ -84,6 +96,7 @@ export default function App() {
         {route === 'notes' && <NotesPage />}
         {route === 'export' && <ExportPage />}
         {route === 'profile' && <ProfilePage />}
+        {route === 'planner' && <PlannerPage />}
       </main>
     </div>
   )

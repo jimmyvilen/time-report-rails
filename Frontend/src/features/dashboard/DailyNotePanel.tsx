@@ -18,6 +18,7 @@ export function DailyNotePanel({ date }: Props) {
   const [content, setContent] = useState('')
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setContent(data?.content ?? '')
     setIsOpen(false)
   }, [date, data?.content])

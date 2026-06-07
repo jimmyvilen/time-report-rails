@@ -19,4 +19,5 @@ public class User
     public ICollection<AppTask> Tasks { get; set; } = [];
     public ICollection<TimeEntry> TimeEntries { get; set; } = [];
     public ICollection<DailyNote> DailyNotes { get; set; } = [];
+    public ICollection<PlannerBlock> PlannerBlocks { get; set; } = [];
 }

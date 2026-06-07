@@ -44,6 +44,28 @@ builder.Services.AddSingleton<TimeEntryResolverService>();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<TimeReport.Api.Data.AppDbContext>();
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS planner_blocks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            date TEXT NOT NULL DEFAULT '',
+            title TEXT NOT NULL DEFAULT '',
+            start_time TEXT,
+            end_time TEXT,
+            color TEXT,
+            notes TEXT,
+            created_at TEXT NOT NULL DEFAULT '',
+            updated_at TEXT NOT NULL DEFAULT ''
+        )
+    ");
+    db.Database.ExecuteSqlRaw(@"
+        CREATE INDEX IF NOT EXISTS planner_blocks_user_id_date_idx ON planner_blocks(user_id, date)
+    ");
+}
+
 app.UseSerilogRequestLogging();
 app.UseDefaultFiles();
 app.UseStaticFiles();

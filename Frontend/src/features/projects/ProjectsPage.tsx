@@ -50,7 +50,8 @@ export function ProjectsPage() {
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    editProject ? updateMutation.mutate() : createMutation.mutate()
+    if (editProject) updateMutation.mutate()
+    else createMutation.mutate()
   }
 
   return (

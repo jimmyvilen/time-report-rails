@@ -85,6 +85,7 @@ export function TimeEntryForm({ date, editEntry, onClose }: Props) {
   })
   useEffect(() => {
     if (recentDescQuery.data?.description && !editEntry) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDescription(recentDescQuery.data.description)
     }
   }, [recentDescQuery.data, editEntry])

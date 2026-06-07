@@ -20,6 +20,7 @@ export function ProfilePage() {
 
   useEffect(() => {
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(user.name ?? '')
       setJiraUrl(user.jiraUrl ?? '')
       setJiraEmail(user.jiraEmail ?? '')
